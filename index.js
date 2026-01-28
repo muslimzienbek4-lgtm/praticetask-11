@@ -10,11 +10,8 @@ app.use(express.json())
 const PORT = process.env.PORT || 3000
 const MONGO_URI = process.env.MONGO_URI
 
-// MongoDB connection
-const client = new MongoClient(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+// MongoDB connection (FIXED for mongodb v7)
+const client = new MongoClient(MONGO_URI)
 
 let productsCollection
 
