@@ -11,25 +11,35 @@ const PORT = process.env.PORT || 3000
 const MONGO_URI = process.env.MONGO_URI
 
 // MongoDB connection
-const client = new MongoClient(MONGO_URI)
+const client = new MongoClient(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
 
 let productsCollection
 
-async function connectDB() {
-  await client.connect()
-  const db = client.db("shop")
-  productsCollection = db.collection("products")
-  console.log("MongoDB connected")
+async function startServer() {
+  try {
+    await client.connect()
+    const db = client.db("shop")
+    productsCollection = db.collection("products")
+    console.log("MongoDB connected")
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`)
+    })
+  } catch (error) {
+    console.error("Failed to connect to MongoDB", error)
+  }
 }
 
-connectDB()
+startServer()
 
 // GET /api/products
 app.get("/api/products", async (req, res) => {
   try {
     const { category, minPrice, sort, fields } = req.query
 
-    // Filter
     const filter = {}
 
     if (category) {
@@ -40,13 +50,11 @@ app.get("/api/products", async (req, res) => {
       filter.price = { $gte: Number(minPrice) }
     }
 
-    // Sort
     const sortOptions = {}
     if (sort === "price") {
       sortOptions.price = 1
     }
 
-    // Projection
     const projection = {}
     if (fields) {
       fields.split(",").forEach(field => {
@@ -66,12 +74,15 @@ app.get("/api/products", async (req, res) => {
   }
 })
 
-// Root endpoint (REQUIRED FOR DEPLOYMENT)
+// Root endpoint
 app.get("/", (req, res) => {
   res.json({ message: "API is running" })
 })
 
-// Server start
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+// Version endpoint (Practice Task 12)
+app.get("/version", (req, res) => {
+  res.json({
+    version: "1.1",
+    updatedAt: "2026-01-28"
+  })
 })
